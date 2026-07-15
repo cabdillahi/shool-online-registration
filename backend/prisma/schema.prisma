@@ -46,6 +46,8 @@ model Application {
   parentName   String
   phoneNumber1 String
   phoneNumber2 String?
+  photoUrl     String?
+  documentUrl  String?
 
   status ApplicationStatus @default(PENDING)
 

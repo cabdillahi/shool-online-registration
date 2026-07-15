@@ -17,13 +17,12 @@ import {
   Bell, 
   LayoutDashboard, 
   LogOut, 
-  User, 
   Menu, 
   X,
   ChevronDown,
   Home,
-  FileText,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -65,7 +64,7 @@ const Navbar: React.FC = () => {
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 print:hidden",
           isScrolled 
             ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-800" 
             : "bg-transparent"
@@ -145,16 +144,28 @@ const Navbar: React.FC = () => {
                     )}
 
                     {isAdmin && (
-                      <Button 
-                        variant={isActive('/admin/dashboard') ? 'secondary' : 'ghost'} 
-                        asChild
-                        className="rounded-full px-4"
-                      >
-                        <Link to="/admin/dashboard">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Admin Panel
-                        </Link>
-                      </Button>
+                      <>
+                        <Button 
+                          variant={isActive('/admin/dashboard') || isActive('/admin/applications') ? 'secondary' : 'ghost'} 
+                          asChild
+                          className="rounded-full px-4"
+                        >
+                          <Link to="/admin/dashboard">
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            Admin Panel
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant={isActive('/admin/reports') ? 'secondary' : 'ghost'} 
+                          asChild
+                          className="rounded-full px-4"
+                        >
+                          <Link to="/admin/reports">
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Reports
+                          </Link>
+                        </Button>
+                      </>
                     )}
                   </>
                 ) : null}
@@ -207,6 +218,14 @@ const Navbar: React.FC = () => {
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="py-3 px-4 cursor-pointer">
+                        <Link to="/admin/reports">
+                          <BarChart3 className="mr-3 h-4 w-4 text-emerald-600" />
+                          Reports
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     {isStudent && (
                       <DropdownMenuItem asChild className="py-3 px-4 cursor-pointer">
                         <Link to="/student/notifications">
@@ -323,12 +342,20 @@ const Navbar: React.FC = () => {
                   </>
                 )}
                 {isAdmin && (
-                  <Button variant="ghost" asChild className="w-full justify-start h-12 rounded-xl">
-                    <Link to="/admin/dashboard">
-                      <LayoutDashboard className="mr-3 h-5 w-5 text-emerald-600" />
-                      Admin Panel
-                    </Link>
-                  </Button>
+                  <>
+                    <Button variant="ghost" asChild className="w-full justify-start h-12 rounded-xl">
+                      <Link to="/admin/dashboard">
+                        <LayoutDashboard className="mr-3 h-5 w-5 text-emerald-600" />
+                        Admin Panel
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" asChild className="w-full justify-start h-12 rounded-xl">
+                      <Link to="/admin/reports">
+                        <BarChart3 className="mr-3 h-5 w-5 text-emerald-600" />
+                        Reports
+                      </Link>
+                    </Button>
+                  </>
                 )}
 
                 {/* User Info */}
@@ -370,7 +397,7 @@ const Navbar: React.FC = () => {
       </motion.nav>
 
       {/* Spacer for fixed navbar */}
-      <div className="h-16 lg:h-20" />
+      <div className="h-16 lg:h-20 print:hidden" />
     </>
   );
 };

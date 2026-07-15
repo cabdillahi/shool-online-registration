@@ -4,9 +4,11 @@ import {
   getMyApplication,
   getAllApplications,
   updateApplicationStatus,
-  getApplicationStats
+  getApplicationStats,
+  updateApplicationFiles,
 } from '../controllers/applicationController';
 import { authenticate, authorizeRole } from '../middleware/auth';
+import { uploadApplicationFiles } from '../middleware/upload';
 
 const router = express.Router();
 
@@ -16,8 +18,21 @@ const router = express.Router();
 router.get('/stats', authenticate, authorizeRole('ADMIN'), getApplicationStats);
 
 // Student routes
-router.post('/', authenticate, authorizeRole('STUDENT'), submitApplication);
+router.post(
+  '/',
+  authenticate,
+  authorizeRole('STUDENT'),
+  uploadApplicationFiles,
+  submitApplication
+);
 router.get('/my-application', authenticate, authorizeRole('STUDENT'), getMyApplication);
+router.post(
+  '/my-application/files',
+  authenticate,
+  authorizeRole('STUDENT'),
+  uploadApplicationFiles,
+  updateApplicationFiles
+);
 
 // Admin routes
 router.get('/', authenticate, authorizeRole('ADMIN'), getAllApplications);

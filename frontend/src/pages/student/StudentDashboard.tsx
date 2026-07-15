@@ -28,7 +28,6 @@ import {
   Phone,
   Users,
   Calendar,
-  ArrowRight,
   Bell,
   GraduationCap,
   Sparkles,
@@ -41,15 +40,16 @@ import {
   RefreshCw,
   ChevronRight,
   Mail,
-  MapPin,
   Shield,
-  Star,
   Target,
   Zap,
-  Heart,
-  Award,
+  Upload,
+  Image as ImageIcon,
+  FileUp,
+  Trash2,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import ApplicationFiles from "../../components/ApplicationFiles";
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -63,7 +63,14 @@ const StudentDashboard: React.FC = () => {
     parentName: "",
     phoneNumber1: "",
     phoneNumber2: "",
+    photo: null,
+    document: null,
   });
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadPhoto, setUploadPhoto] = useState<File | null>(null);
+  const [uploadDocument, setUploadDocument] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
   useEffect(() => {
     fetchApplication();
@@ -90,6 +97,84 @@ const StudentDashboard: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.size > 5 * 1024 * 1024) {
+      toast.error("Photo must be under 5MB");
+      return;
+    }
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    setFormData({ ...formData, photo: file });
+    setPhotoPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.size > 5 * 1024 * 1024) {
+      toast.error("Document must be under 5MB");
+      return;
+    }
+    setFormData({ ...formData, document: file });
+  };
+
+  const clearPhoto = (): void => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setFormData({ ...formData, photo: null });
+    setPhotoPreview(null);
+  };
+
+  const clearDocument = (): void => {
+    setFormData({ ...formData, document: null });
+  };
+
+  const handleLatePhotoChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.size > 5 * 1024 * 1024) {
+      toast.error("Photo must be under 5MB");
+      return;
+    }
+    if (uploadPreview) URL.revokeObjectURL(uploadPreview);
+    setUploadPhoto(file);
+    setUploadPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const handleLateDocumentChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.size > 5 * 1024 * 1024) {
+      toast.error("Document must be under 5MB");
+      return;
+    }
+    setUploadDocument(file);
+  };
+
+  const handleUploadMissingFiles = async (): Promise<void> => {
+    if (!uploadPhoto && !uploadDocument) {
+      toast.error("Please select a photo or document");
+      return;
+    }
+    setIsUploadingFiles(true);
+    try {
+      const response = await applicationService.uploadApplicationFiles({
+        photo: uploadPhoto,
+        document: uploadDocument,
+      });
+      setApplication(response.application);
+      setUploadPhoto(null);
+      setUploadDocument(null);
+      if (uploadPreview) URL.revokeObjectURL(uploadPreview);
+      setUploadPreview(null);
+      toast.success("Files uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to upload files");
+    } finally {
+      setIsUploadingFiles(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -616,6 +701,120 @@ const StudentDashboard: React.FC = () => {
                           </div>
                         </motion.div>
 
+                        <Separator />
+
+                        {/* Documents & Photo */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.15 }}
+                          className="space-y-6"
+                        >
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                              <Upload className="h-5 w-5 text-cyan-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">Documents & Photo</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Upload a student photo and supporting document
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-6 md:grid-cols-2">
+                            {/* Photo upload */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Student Photo{" "}
+                                <span className="text-muted-foreground">(Optional)</span>
+                              </Label>
+                              {photoPreview ? (
+                                <div className="relative rounded-xl overflow-hidden border-2 border-emerald-200 bg-slate-50">
+                                  <img
+                                    src={photoPreview}
+                                    alt="Preview"
+                                    className="w-full h-44 object-cover"
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="destructive"
+                                    className="absolute top-2 right-2 rounded-full"
+                                    onClick={clearPhoto}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  <p className="p-2 text-xs text-muted-foreground truncate bg-white">
+                                    {formData.photo?.name}
+                                  </p>
+                                </div>
+                              ) : (
+                                <label className="flex flex-col items-center justify-center h-44 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/40 cursor-pointer transition-colors">
+                                  <ImageIcon className="h-8 w-8 text-slate-400 mb-2" />
+                                  <span className="text-sm font-medium text-slate-600">
+                                    Click to upload photo
+                                  </span>
+                                  <span className="text-xs text-muted-foreground mt-1">
+                                    JPEG, PNG, WebP · max 5MB
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    className="hidden"
+                                    onChange={handlePhotoChange}
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                            {/* Document upload */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">
+                                Supporting Document{" "}
+                                <span className="text-muted-foreground">(Optional)</span>
+                              </Label>
+                              {formData.document ? (
+                                <div className="flex flex-col items-center justify-center h-44 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 relative">
+                                  <FileUp className="h-8 w-8 text-emerald-600 mb-2" />
+                                  <p className="text-sm font-medium text-center truncate max-w-full px-2">
+                                    {formData.document.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {(formData.document.size / 1024).toFixed(0)} KB
+                                  </p>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-3 rounded-full"
+                                    onClick={clearDocument}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Remove
+                                  </Button>
+                                </div>
+                              ) : (
+                                <label className="flex flex-col items-center justify-center h-44 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:border-teal-400 hover:bg-teal-50/40 cursor-pointer transition-colors">
+                                  <FileText className="h-8 w-8 text-slate-400 mb-2" />
+                                  <span className="text-sm font-medium text-slate-600">
+                                    Click to upload document
+                                  </span>
+                                  <span className="text-xs text-muted-foreground mt-1 text-center px-4">
+                                    Birth certificate / ID · PDF or image · max 5MB
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    className="hidden"
+                                    onChange={handleDocumentChange}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+
                         {/* Notice */}
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -835,6 +1034,92 @@ const StudentDashboard: React.FC = () => {
                               <p className="text-lg font-semibold">
                                 {application.phoneNumber2 || "Not provided"}
                               </p>
+                            </div>
+
+                            {/* Uploaded files */}
+                            <div className="md:col-span-2 space-y-4">
+                              <ApplicationFiles
+                                photoUrl={application.photoUrl}
+                                documentUrl={application.documentUrl}
+                              />
+
+                              {(!application.photoUrl ||
+                                !application.documentUrl) && (
+                                <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 p-4 space-y-4">
+                                  <div>
+                                    <h4 className="font-semibold text-sm text-emerald-900">
+                                      Upload missing files
+                                    </h4>
+                                    <p className="text-xs text-emerald-800/80 mt-1">
+                                      Add your student photo and/or supporting
+                                      document so admins can review them.
+                                    </p>
+                                  </div>
+                                  <div className="grid sm:grid-cols-2 gap-3">
+                                    {!application.photoUrl && (
+                                      <label className="flex flex-col items-center justify-center min-h-28 rounded-xl border-2 border-dashed border-emerald-200 bg-white cursor-pointer hover:border-emerald-400 p-3">
+                                        {uploadPreview ? (
+                                          <img
+                                            src={uploadPreview}
+                                            alt="Preview"
+                                            className="h-24 w-full object-cover rounded-lg"
+                                          />
+                                        ) : (
+                                          <>
+                                            <ImageIcon className="h-6 w-6 text-emerald-600 mb-1" />
+                                            <span className="text-xs font-medium">
+                                              Choose photo
+                                            </span>
+                                          </>
+                                        )}
+                                        <input
+                                          type="file"
+                                          accept="image/jpeg,image/png,image/webp,image/gif"
+                                          className="hidden"
+                                          onChange={handleLatePhotoChange}
+                                        />
+                                      </label>
+                                    )}
+                                    {!application.documentUrl && (
+                                      <label className="flex flex-col items-center justify-center min-h-28 rounded-xl border-2 border-dashed border-emerald-200 bg-white cursor-pointer hover:border-emerald-400 p-3">
+                                        <FileUp className="h-6 w-6 text-emerald-600 mb-1" />
+                                        <span className="text-xs font-medium text-center">
+                                          {uploadDocument
+                                            ? uploadDocument.name
+                                            : "Choose document"}
+                                        </span>
+                                        <input
+                                          type="file"
+                                          accept="image/jpeg,image/png,image/webp,application/pdf"
+                                          className="hidden"
+                                          onChange={handleLateDocumentChange}
+                                        />
+                                      </label>
+                                    )}
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                                    disabled={
+                                      isUploadingFiles ||
+                                      (!uploadPhoto && !uploadDocument)
+                                    }
+                                    onClick={handleUploadMissingFiles}
+                                  >
+                                    {isUploadingFiles ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Uploading...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Upload files
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
 
                             {/* Submitted Date */}

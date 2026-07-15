@@ -4,9 +4,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
   timeout: 10000,
 });
 
@@ -14,14 +11,21 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
+
+    // JSON by default — but never force Content-Type on FormData
+    // (browser must set multipart boundary)
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.headers.delete('Content-Type');
+    } else if (!config.headers.get('Content-Type')) {
+      config.headers.set('Content-Type', 'application/json');
+    }
+
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (error: AxiosError) => Promise.reject(error)
 );
 
 // Response interceptor

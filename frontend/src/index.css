@@ -128,3 +128,47 @@
     @apply font-sans;
     }
 }
+
+/* Printable registration reports */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide chrome: navbar, sidebar, toasts, non-print UI */
+  nav,
+  aside,
+  [data-sonner-toaster],
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-report {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+  }
+
+  .report-table th,
+  .report-table td {
+    border-color: #333 !important;
+  }
+
+  .report-table thead tr {
+    background: #e5e7eb !important;
+  }
+}

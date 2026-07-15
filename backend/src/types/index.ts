@@ -40,6 +40,8 @@ export interface ApplicationInput {
   parentName: string;
   phoneNumber1: string;
   phoneNumber2?: string;
+  photoUrl?: string;
+  documentUrl?: string;
 }
 
 export interface UpdateStatusInput {
@@ -62,6 +64,8 @@ export interface Application {
   parentName: string;
   phoneNumber1: string;
   phoneNumber2: string | null;
+  photoUrl: string | null;
+  documentUrl: string | null;
   status: ApplicationStatus;
   createdAt: Date;
   updatedAt: Date;

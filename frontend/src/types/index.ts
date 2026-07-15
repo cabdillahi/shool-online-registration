@@ -24,6 +24,8 @@ export interface Application {
   parentName: string;
   phoneNumber1: string;
   phoneNumber2?: string | null;
+  photoUrl?: string | null;
+  documentUrl?: string | null;
   status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;
@@ -55,6 +57,8 @@ export interface ApplicationFormData {
   parentName: string;
   phoneNumber1: string;
   phoneNumber2?: string;
+  photo?: File | null;
+  document?: File | null;
 }
 
 export interface LoginFormData {

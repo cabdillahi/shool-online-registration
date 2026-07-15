@@ -8,6 +8,7 @@ import {
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
+import AdminLayout from "./components/layout/AdminLayout";
 
 // Pages
 import Home from "./pages/Home";
@@ -16,6 +17,8 @@ import Register from "./pages/Register";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import Notifications from "./pages/student/Notifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminApplications from "./pages/admin/AdminApplications";
+import AdminReports from "./pages/admin/AdminReports";
 import Navbar from "./components/layout/Navbar";
 
 const App: React.FC = () => {
@@ -51,13 +54,18 @@ const App: React.FC = () => {
 
               {/* Admin Routes */}
               <Route
-                path="/admin/dashboard"
+                path="/admin"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
-                    <AdminDashboard />
+                    <AdminLayout />
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="applications" element={<AdminApplications />} />
+                <Route path="reports" element={<AdminReports />} />
+              </Route>
 
               {/* Catch all */}
               <Route path="*" element={<Navigate to="/" replace />} />

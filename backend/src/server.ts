@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import authRoutes from './routes/authRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import notificationRoutes from './routes/notificationRoutes';
@@ -18,6 +19,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Request logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -47,6 +49,17 @@ app.use((_req: Request, res: Response) => {
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err.stack);
+
+  if (err.message?.includes('Photo must') || err.message?.includes('Document must') || err.message?.includes('Unexpected file')) {
+    res.status(400).json({ message: err.message });
+    return;
+  }
+
+  if (err.message === 'File too large') {
+    res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+    return;
+  }
+
   res.status(500).json({ 
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined

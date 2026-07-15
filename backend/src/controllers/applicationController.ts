@@ -44,6 +44,19 @@ export const submitApplication = async (
       return;
     }
 
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
+    const photoFile = files?.photo?.[0];
+    const documentFile = files?.document?.[0];
+
+    console.log("Application upload files:", {
+      contentType: req.headers["content-type"],
+      photo: photoFile?.filename ?? null,
+      document: documentFile?.filename ?? null,
+      bodyKeys: Object.keys(req.body || {}),
+    });
+
     const application = await prisma.application.create({
       data: {
         userId,
@@ -51,6 +64,8 @@ export const submitApplication = async (
         parentName: parentName.trim(),
         phoneNumber1: phoneNumber1.trim(),
         phoneNumber2: phoneNumber2?.trim() || null,
+        photoUrl: photoFile?.filename || null,
+        documentUrl: documentFile?.filename || null,
       },
     });
 
@@ -70,6 +85,58 @@ export const submitApplication = async (
   } catch (error) {
     console.error("Application submission error:", error);
     res.status(500).json({ message: "Failed to submit application" });
+  }
+};
+
+export const updateApplicationFiles = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: "User not authenticated" });
+      return;
+    }
+
+    const userId = req.user.id;
+    const application = await prisma.application.findUnique({
+      where: { userId },
+    });
+
+    if (!application) {
+      res.status(404).json({ message: "No application found" });
+      return;
+    }
+
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
+    const photoFile = files?.photo?.[0];
+    const documentFile = files?.document?.[0];
+
+    if (!photoFile && !documentFile) {
+      res.status(400).json({ message: "Please upload a photo or document" });
+      return;
+    }
+
+    const updated = await prisma.application.update({
+      where: { userId },
+      data: {
+        ...(photoFile ? { photoUrl: photoFile.filename } : {}),
+        ...(documentFile ? { documentUrl: documentFile.filename } : {}),
+      },
+      include: {
+        user: { select: { email: true } },
+      },
+    });
+
+    res.status(200).json({
+      message: "Files uploaded successfully",
+      application: updated,
+    });
+  } catch (error) {
+    console.error("File upload error:", error);
+    res.status(500).json({ message: "Failed to upload files" });
   }
 };
 
